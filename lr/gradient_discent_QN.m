@@ -2,15 +2,16 @@
 
 [train,test] = split_train_test('breast-cancer-wisconsin-tag.data');
 fea_dim = 9 ;
+[train_num,f_num] = size(train) ;
 train_X = train(:,2:10);
 train_X = [train_X ones(train_num,1)];
-[train_num f_num] = size(train_X) ;
+[train_num,f_num] = size(train_X) ;
 train_y = train(:,end);
 options = optimset('GradObj', 'on', 'MaxIter', 100);
 alpha = 0.0001 ;
 L2_C = 0 ;
 theta = zeros(fea_dim+1,1);
-max_iters = 1000 ;
+max_iters = 100 ;
 %intial iteration
 [cost,t] = costFunc(theta,alpha,train_X,train_y,L2_C);
 theta = t ;
@@ -34,7 +35,9 @@ cost_iter = zeros(1,max_iters) ;
     end
  theta_last = theta;  
 for iter=1:max_iters
-    [cost,t,B] = costFuncDFP(theta,alpha,train_X,train_y,L2_C,theta_last,B);    
+    %[cost,t,B] = costFuncDFP(theta,alpha,train_X,train_y,L2_C,theta_last,B);
+    H = pinv(B);
+    [cost,t,H] = costFuncBFGS(theta,alpha,train_X,train_y,L2_C,theta_last,H);  
     cost_diff = (last_cost - cost)/last_cost ;
     %disp('----------theta after iter----------');
     %disp(theta');
@@ -54,7 +57,7 @@ plot(1:max_iters,cost_iter);
 
 
 %measure model theta on test data
-[test_num fea_num] = size(test);
+[test_num,f_num] = size(test);
 test_X = test(:,2:10);
 test_X = [test_X ones(test_num,1)];
 test_y = test(:,end);
