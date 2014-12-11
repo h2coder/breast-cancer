@@ -2,7 +2,7 @@
 % This script will use logistic regression to train a classification model
 % for breast cancer data
 
-data = csvread('breast-cancer-wisconsin.data');
+data = csvread('breast-cancer-wisconsin-trust.data');
 
 data_train = data(1:350, :); % Data used for training.  Remainder will be for testing.
 % Feature data to be used for testing the model

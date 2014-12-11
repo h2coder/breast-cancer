@@ -1,7 +1,6 @@
-%for standard, matrix refered to 1 column of row vectors
-%X matrix train_num*feature_num
-%y label vector, size is train_num
-function [jVal, t] = costFunc(theta,alpha,X,y,lambda)
+function [jVal, t] = costFuncNewton(theta,alpha,X,y,lambda)
+%clac grdient using newton method
+%   Detailed explanation goes here
     if nargin < 5
         lambda = 0.0 ;
     end
@@ -38,9 +37,23 @@ function [jVal, t] = costFunc(theta,alpha,X,y,lambda)
     %jVal = sum(log(sig_y_theta_x.^-1)) ;
     %jVal = sum(log(1+exp(-scala_y)));
     %fprintf('in iteration jval: %f \n',jVal);
-    dot_sig_y = sig_y_theta_x - ones(train_num,1); % train_num*1
-    D =  X' * (dot_sig_y .* y)  ; % f_num * 1 
-    D = D + lambda*theta ;
-    t = theta - alpha * D ;
-end
     
+    %calc Hessian matrix
+    sig_theta_x = sigmod(dot_theta_x);
+    B = zeros(f_num);
+    for k=1:f_num
+        for s=1:f_num
+            X_k = X(:,k);
+            X_s = X(:,s);
+            B(k,s) = sum((sig_theta_x.*(1-sig_theta_x)).*(X_k.*X_s));
+        end
+    end
+    H = pinv(B);
+    dot_sig_y = sig_y_theta_x - ones(train_num,1); % train_num*1
+    D =  X' * (dot_sig_y .* y)  ; % f_num * 1
+    %H = pinv(sum((sig_theta_x.*(1-sig_theta_x))*(X'*X)));
+    D = D + lambda*theta ;
+    P = (-H)*D ; %newton direction
+    t = theta + alpha * P ;
+end
+

@@ -1,10 +1,10 @@
-% the normal gradient discent algorithm --logistic regression
+% quasi-newton algorithm --logistic regression
 
 [train,test] = split_train_test('breast-cancer-wisconsin-tag.data');
 fea_dim = 9 ;
-[train_num fea_num] = size(train) ;
 train_X = train(:,2:10);
 train_X = [train_X ones(train_num,1)];
+[train_num f_num] = size(train_X) ;
 train_y = train(:,end);
 options = optimset('GradObj', 'on', 'MaxIter', 100);
 alpha = 0.0001 ;
@@ -19,13 +19,22 @@ last_cost = cost ;
 
 %while max_iters > 0 
 cost_iter = zeros(1,max_iters) ;
+
+%calc B_0
+    %calc Hessian matrix
+    dot_theta_x = train_X* theta ;
+    sig_theta_x = sigmod(dot_theta_x);
+    B = zeros(f_num);
+    for k=1:f_num
+        for s=1:f_num
+            X_k = train_X(:,k);
+            X_s = train_X(:,s);
+            B(k,s) = sum((sig_theta_x.*(1-sig_theta_x)).*(X_k.*X_s));
+        end
+    end
+ theta_last = theta;  
 for iter=1:max_iters
-    %[cost,t] = costFunc(theta,alpha,train_X,train_y,L2_C);
-    %[cost,t] = costFuncGrad2(theta,alpha,train_X,train_y,L2_C);
-    %[cost,t] = costFuncGrad4Linear(theta,alpha,train_X,train_y);
-    %[cost,t] = costFuncNewton(theta,alpha,train_X,train_y,L2_C);
-    [cost,t] = costFuncNewton2(theta,alpha,train_X,train_y,L2_C);
-    theta = t ;
+    [cost,t,B] = costFuncDFP(theta,alpha,train_X,train_y,L2_C,theta_last,B);    
     cost_diff = (last_cost - cost)/last_cost ;
     %disp('----------theta after iter----------');
     %disp(theta');
@@ -36,6 +45,8 @@ for iter=1:max_iters
     %max_iters = max_iters - 1 ;
     last_cost = cost ;
     cost_iter(iter) = last_cost;
+    theta_last = theta ;
+    theta = t ;
 end
 % Create New Figure
 figure; hold on;
